@@ -104,6 +104,7 @@ const init = async () => {
   }
   if (user.value == undefined) {
     auth_api.logout()
+    return
   }
   let genRouterPaths = await gen_router_paths(user.value.menus);
   genRouterPaths.unshift(header)

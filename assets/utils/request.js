@@ -29,7 +29,7 @@ service.interceptors.response.use(
         }
     }, (err) => {
         console.log('err',err.message)
-        msg.err(err.message)
+        msg.err('错误: '+err.message)
         Promise.reject(err)
     }
 )

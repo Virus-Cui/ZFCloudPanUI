@@ -34,7 +34,7 @@ const login = ()=>{
         <div style="display: flex;justify-content: center;margin: 1rem 0">
           <img :src="sys_setting.logo" width="200" alt="">
         </div>
-        <div class="title">登陆 - {{sys_setting.title}}｜管理端 </div>
+        <div class="title">登陆 - {{sys_setting.title}}｜用户端 </div>
         <div class="form">
           <n-form>
             <n-form-item label="用户名">
