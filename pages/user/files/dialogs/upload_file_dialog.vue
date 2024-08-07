@@ -4,6 +4,7 @@ import Folder from "assets/icon/colorful/Folder.vue";
 import type {UploadCustomRequestOptions} from "naive-ui";
 import {service} from "assets/utils/request";
 import BMF from 'browser-md5-file';
+import SparkMD5 from 'spark-md5'
 import * as msg from '@/assets/utils/message'
 
 const emits = defineEmits(['upload_success'])
@@ -46,28 +47,65 @@ const customRequest = ({
   }
   msg.warn('正在计算MD5')
   formData.append(file.name, file.file as File)
-  bmf.md5(
-      file.file,
-      (err, md5) => {
-        console.log('err:', err);
-        console.log('md5 string:', md5); // 97027eb624f85892c69c4bcec8ab0f11
-        msg.warn(`MD5计算成功：${md5}`)
-        upload_chunk(file.file, 0, null, {
-          file,
-          data,
-          headers,
-          withCredentials,
-          action,
-          onFinish,
-          onError,
-          onProgress
-        })
-      },
-      progress => {
-        console.log(progress)
-        onProgress({percent: progress*100})
-      },
-  )
+  // 计算MD5
+  // var blobSlice = File.prototype.slice || File.prototype.mozSlice || File.prototype.webkitSlice,
+  //     file_c = file.file,
+  //     chunkSize = 209715200,                             // Read in chunks of 2MB
+  //     chunks = Math.ceil(file_c.size / chunkSize),
+  //     currentChunk = 0,
+  //     spark = new SparkMD5.ArrayBuffer(),
+  //     fileReader = new FileReader();
+  //
+  // fileReader.onload = function (e) {
+  //   console.log('read chunk nr', currentChunk + 1, 'of', chunks);
+  //   spark.append(e.target.result);                   // Append array buffer
+  //   currentChunk++;
+  //
+  //   if (currentChunk < chunks) {
+  //     loadNext();
+  //   } else {
+  //     console.log('finished loading');
+  //     console.info('computed hash', spark.end());  // Compute hash
+  //   }
+  // };
+  //
+  // fileReader.onerror = function () {
+  //   console.warn('oops, something went wrong.');
+  // };
+  //
+  // function loadNext() {
+  //   var start = currentChunk * chunkSize,
+  //       end = ((start + chunkSize) >= file_c.size) ? file_c.size : start + chunkSize;
+  //
+  //   fileReader.readAsArrayBuffer(blobSlice.call(file_c, start, end));
+  // }
+  //
+  // loadNext();
+
+  upload_chunk(file.file, 0, null, {
+    file,
+    data,
+    headers,
+    withCredentials,
+    action,
+    onFinish,
+    onError,
+    onProgress
+  })
+
+  // bmf.md5(
+  //     file.file,
+  //     (err, md5) => {
+  //       console.log('err:', err);
+  //       console.log('md5 string:', md5); // 97027eb624f85892c69c4bcec8ab0f11
+  //       msg.warn(`MD5计算成功：${md5}`)
+  //       // 上传文件
+  //     },
+  //     progress => {
+  //       console.log(progress)
+  //       onProgress({percent: progress*100})
+  //     },
+  // )
 
 }
 

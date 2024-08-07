@@ -1,6 +1,15 @@
 <script setup>
 import {h, ref, onMounted, watch} from "vue";
-import {NIcon, darkTheme, useOsTheme, NConfigProvider, useLoadingBar, useMessage, useDialog, useNotification} from "naive-ui";
+import {
+  NIcon,
+  darkTheme,
+  useOsTheme,
+  NConfigProvider,
+  useLoadingBar,
+  useMessage,
+  useDialog,
+  useNotification
+} from "naive-ui";
 import swBtn from '@/components/switch.vue'
 import text from '~/components/logo-text.vue'
 import {useRouter, useRoute} from "#app";
@@ -10,13 +19,16 @@ import NuxtLink from "#app/components/nuxt-link.js";
 import {theme} from '~/assets/config/theme'
 import {renderIcon} from "assets/utils/icons.js";
 import {useUserStore} from "~/store/UseUserStore";
+import {useDownloadTaskStore} from "~/store/useDownloadTaskStore";
 import {storeToRefs} from "pinia";
 import * as auth_api from '~/layouts/apis'
 import {CloseOutlined} from '@vicons/antd'
 import {creatWebSocket} from '@/assets/utils/websocket'
+import {size2Str} from "../assets/utils/commons.js";
 
 const links = ref([])
 const user = storeToRefs(useUserStore()).user_info
+const download_tasks = storeToRefs(useDownloadTaskStore()).task
 const loading = ref(true)
 const router = useRouter();
 const path = ref()
@@ -141,7 +153,6 @@ const $mount = () => {
     set_item()
     let interval = setInterval(() => {
       var elementById = document.getElementById('space');
-      console.log(elementById)
       if (elementById != null) {
         clearInterval(interval)
         document.getElementById('space').addEventListener('wheel', (event) => {
@@ -170,6 +181,16 @@ const change = (e) => {
     localStorage.setItem('path', e.target.innerText)
   }
 }
+
+const cancel_download = (id)=>{
+  for (let i = 0; i < download_tasks.value.length; i++) {
+    let ele = download_tasks.value[i]
+    if(ele.file_id == id){
+      download_tasks.value = download_tasks.value.filter(item => item !== ele);
+    }
+  }
+}
+
 </script>
 
 <template>
@@ -222,7 +243,46 @@ const change = (e) => {
               <div>
                 <Bread/>
               </div>
-              <div>
+              <div style="flex-direction: row;display: flex;">
+                <div style="margin-right: 1rem;">
+                  <n-popover style="width: 400px;" trigger="click">
+                    <template #trigger>
+                      <n-badge :value="download_tasks.length">
+                        <i style="font-size: 1.2rem;cursor: pointer" class="iconfont icon-download"></i>
+                      </n-badge>
+                    </template>
+                    <template #header>
+                      <div
+                          style="display: flex;justify-content: center;align-items: center;font-size: 1.2rem;font-weight: 800;">
+                        下载任务
+                      </div>
+                    </template>
+                    <!--                    {{download_tasks}}-->
+                    <n-scrollbar style="max-height: 300px">
+                      <n-empty v-if="download_tasks.length == 0" description="当前没有下载任务">
+                        <template #extra>
+
+                        </template>
+                      </n-empty>
+                      <div v-else v-for="item in download_tasks"
+                           style="border: 1px solid #dfdfdf;padding: .5rem;border-radius: 4px;margin: .5rem 0">
+                        <div style="display: flex;justify-content: space-between">
+                          <div>{{ item.file_name }}</div>
+                          <div @click="cancel_download(item.file_id)" class="close-btn"><i class="iconfont icon-close"></i></div>
+                        </div>
+                        <n-progress :show-indicator="false" type="line" :percentage="item.percent"  :processing="item.percent != 100" />
+                        <div style="display: flex;justify-content: space-between">
+                          <div>{{ size2Str(item.speed) }}/s</div>
+                          <div>{{ item.percent }}%</div>
+                        </div>
+                      </div>
+                    </n-scrollbar>
+                    <template #footer>
+                    </template>
+                  </n-popover>
+
+
+                </div>
                 <swBtn @change="changeTheme"></swBtn>
               </div>
             </div>
@@ -299,5 +359,26 @@ const change = (e) => {
   border-radius: 10px;
   -webkit-box-shadow: inset 0 0 6px rgba(0, 0, 0, .3);
   background-color: #555;
+}
+
+.close-btn{
+  width: 20px;
+  height: 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 50%;
+  border: 1px solid #dfdfdf;
+  transition: all .2s;
+  cursor: pointer;
+  margin-bottom: .2rem;
+  &:hover{
+    background: rgba(223, 223, 223, .6);
+  }
+  i{
+    &::before{
+      vertical-align: middle;
+    }
+  }
 }
 </style>

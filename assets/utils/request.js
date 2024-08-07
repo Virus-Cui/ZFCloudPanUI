@@ -16,6 +16,9 @@ service.interceptors.request.use(config => {
 
 service.interceptors.response.use(
     (res) => {
+        if(res.data instanceof Blob){
+            return res
+        }
         if (res.data?.code === 2) {
             msg.err(res.data.msg)
             storeToRefs(useLayoutStore()).layout.value = 'login'
@@ -28,7 +31,9 @@ service.interceptors.response.use(
             msg.err(res.data.msg)
         }
     }, (err) => {
-        console.log('err',err.message)
+        if(err.code == "ERR_CANCELED"){
+            return
+        }
         msg.err('错误: '+err.message)
         Promise.reject(err)
     }

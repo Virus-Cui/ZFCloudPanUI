@@ -3,7 +3,7 @@ import {ref, reactive, onMounted} from "vue";
 import {navigateTo} from "#app/composables/router";
 
 onMounted(()=>{
-  navigateTo('/dashboard')
+  navigateTo('/user/files')
 })
 </script>
 

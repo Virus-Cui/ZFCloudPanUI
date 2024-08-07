@@ -7,6 +7,8 @@ import * as apis from './apis'
 import {size2Str} from "assets/utils/commons";
 import FileIcon from './components/FileIcon.vue'
 import Upload_file_dialog from "~/pages/user/files/dialogs/upload_file_dialog.vue";
+import {NProgress} from 'naive-ui'
+import SpeedBar from "~/pages/user/files/components/SpeedBar.vue";
 
 const upload_file_dialog = ref()
 const loading = ref(false)
@@ -24,17 +26,34 @@ const columns = [
       })
     }
   },
-  {title: '文件名称', key: 'fileName'},
-  {title: '文件类型', key: 'fileType'},
   {
-    title: '文件大小', render(row) {
+    title: '文件名称',
+    key: 'fileName',
+    minWidth: '200px'
+  },
+  {
+    title: '文件大小',
+    width: '100',
+    render(row) {
       return size2Str(row.fileSize)
     }
   },
-  {title: '创建时间', key: 'createTime'},
+  {
+    title: '创建时间',
+    key: 'createTime',
+    width: '180'
+  },
   {
     title: '操作',
+    width: '100',
     render(row) {
+      return h('div', null, [
+          h(NButton, {
+            onClick: ()=>{
+              apis.add_download_task(row)
+            }
+          }, '下载')
+      ])
     }
   }
 ]
@@ -94,7 +113,7 @@ const current_row = ref()
 
 const options: DropdownOption[] = [
   {
-    label: '下载',
+    label: '添加下载任务',
     key: 'download'
   },
   {
@@ -108,9 +127,10 @@ const onClickoutside = () => {
 }
 
 const handleSelect = (str) => {
-  switch (str){
+  let current = current_row.value
+  switch (str) {
     case 'download':
-      apis.download_file(current_row.value)
+      apis.add_download_task(current)
       break
     case 'delete':
       break
@@ -182,7 +202,7 @@ onMounted(() => {
           @select="handleSelect"
       />
     </n-card>
-    <upload_file_dialog @upload_success="init()" ref="upload_file_dialog" />
+    <upload_file_dialog @upload_success="init()" ref="upload_file_dialog"/>
   </div>
 </template>
 

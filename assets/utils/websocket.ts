@@ -5,10 +5,11 @@ let instance: WebSocket | null = null;
 let delay;
 
 export function creatWebSocket(wsUrl: string) {
-    console.log("websocket==================");
+    if(instance != null){
+        instance.close()
+    }
     // 判断当前浏览器是否支持WebSocket
     if ("WebSocket" in window) {
-        console.log("当前浏览器支持 WebSocket");
     } else if ("MozWebSocket" in window) {
         console.log("当前浏览器支持 MozWebSocket");
     } else {
@@ -18,7 +19,6 @@ export function creatWebSocket(wsUrl: string) {
     try {
         create_new_connect(wsUrl); // 初始化websocket连接
     } catch (e) {
-        console.log("尝试创建连接失败");
         re_connect(wsUrl); // 如果无法连接上 webSocket 那么重新连接！可能会因为服务器重新部署，或者短暂断网等导致无法创建连接
     }
 }
@@ -57,7 +57,6 @@ const re_connect = (url) => {
 }
 
 const handle_active = (type, command) => {
-    console.log(type)
     switch (type) {
         case 'normal':
             break

@@ -19,3 +19,15 @@ export const size2Str = (size) => {
         return 0 + " B";
     }
 };
+
+export const send_msg = (msg)=>{
+    if(window.Notification && Notification.permission !== "denied") {
+        Notification.requestPermission(function(status) {
+            if (status === "granted") {
+                var n = new Notification(msg);
+            } else {
+                alert(msg);
+            }
+        });
+    }
+}
