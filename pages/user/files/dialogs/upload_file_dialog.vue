@@ -6,6 +6,7 @@ import {service} from "assets/utils/request";
 import BMF from 'browser-md5-file';
 import SparkMD5 from 'spark-md5'
 import * as msg from '@/assets/utils/message'
+import * as layout_api from '~/layouts/apis'
 
 const emits = defineEmits(['upload_success'])
 const bmf = new BMF();
@@ -45,7 +46,7 @@ const customRequest = ({
       )
     })
   }
-  msg.warn('正在计算MD5')
+  // msg.warn('正在计算MD5')
   formData.append(file.name, file.file as File)
   // 计算MD5
   // var blobSlice = File.prototype.slice || File.prototype.mozSlice || File.prototype.webkitSlice,
@@ -144,11 +145,12 @@ const upload_chunk = (file, index, id, upload_options) => {
   data.append("file_id", id)
   data.append("file_size", file_size)
   data.append("file_pid", '0')
-  service.post(`/stream/upload?chunkNum=${chunk_num}&chunkIndex=${index}`, data).then(res => {
+  service.post(`/stream?chunkNum=${chunk_num}&chunkIndex=${index}`, data).then(res => {
     if (chunk_num == index + 1) {
       upload_options.onFinish()
       emits('upload_success')
       Reflect.deleteProperty(percent.value, file_name)
+      layout_api.get_user_storage()
       return
     } else {
       upload_chunk(file, index + 1, res.data.data, upload_options)

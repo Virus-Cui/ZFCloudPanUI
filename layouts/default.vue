@@ -10,6 +10,8 @@ import {
   useDialog,
   useNotification
 } from "naive-ui";
+
+import {HddOutlined} from '@vicons/antd'
 import swBtn from '@/components/switch.vue'
 import text from '~/components/logo-text.vue'
 import {useRouter, useRoute} from "#app";
@@ -19,18 +21,22 @@ import NuxtLink from "#app/components/nuxt-link.js";
 import {theme} from '~/assets/config/theme'
 import {renderIcon} from "assets/utils/icons.js";
 import {useUserStore} from "~/store/UseUserStore";
-import {useDownloadTaskStore} from "~/store/useDownloadTaskStore";
+import {useDownloadTaskStore} from "~/store/UseDownloadTaskStore";
+import {useStorageStore} from "~/store/UseStorageStore";
 import {storeToRefs} from "pinia";
 import * as auth_api from '~/layouts/apis'
 import {CloseOutlined} from '@vicons/antd'
 import {creatWebSocket} from '@/assets/utils/websocket'
 import {size2Str} from "../assets/utils/commons.js";
+import {get_user_storage} from "~/layouts/apis";
 
 const links = ref([])
 const user = storeToRefs(useUserStore()).user_info
 const download_tasks = storeToRefs(useDownloadTaskStore()).task
+const storage = storeToRefs(useStorageStore()).data
 const loading = ref(true)
 const router = useRouter();
+const percent = ref(0)
 const path = ref()
 const loadingBar = useLoadingBar();
 const options = [
@@ -108,8 +114,19 @@ const handleSelect = (key) => {
   }
 }
 
+const getStorage = () => {
+  percent.value = ((storage.value?.used_storage / storage.value?.total_storage) * 100).toFixed(2);
+}
+
+watch(() => storage.value, () => {
+  percent.value = ((storage.value?.used_storage / storage.value?.total_storage) * 100).toFixed(2);
+})
+
 const init = async () => {
   loading.value = true
+  get_user_storage().then(res => {
+    getStorage()
+  })
   if (process.client) {
     loadingBar.start()
     path.value = router.currentRoute.value.fullPath
@@ -182,10 +199,10 @@ const change = (e) => {
   }
 }
 
-const cancel_download = (id)=>{
+const cancel_download = (id) => {
   for (let i = 0; i < download_tasks.value.length; i++) {
     let ele = download_tasks.value[i]
-    if(ele.file_id == id){
+    if (ele.file_id == id) {
       download_tasks.value = download_tasks.value.filter(item => item !== ele);
     }
   }
@@ -208,7 +225,8 @@ const cancel_download = (id)=>{
             @collapse="collapsed = true"
             @expand="collapsed = false"
         >
-          <div style="display: flex;height: 100vh; width: 100%;  justify-content: space-between;flex-direction: column">
+          <div
+              style="display: flex;height: 100vh; width: 100%;  justify-content: space-between;flex-direction: column;">
             <n-skeleton v-if="loading" :width="'100%'" :height="'100%'" size="medium"/>
             <n-menu
                 v-else
@@ -220,8 +238,9 @@ const cancel_download = (id)=>{
                 @click="change"
             />
             <div
-                :style="{'position': 'relative', 'z-index': '999', 'height': '3rem'}" class="admin">
-              <div v-if="!collapsed" style="display: flex;justify-content: left;align-items: center;width: 100%">
+                :style="{'position': 'relative', 'z-index': '999', 'height': collapsed?'5rem':'6rem'}" class="admin">
+              <div v-if="!collapsed"
+                   style="display: flex;justify-content: left;align-items: center;width: 100%;flex-wrap: wrap">
                 <div style="margin: 0 1rem">
                   <n-dropdown trigger="hover" :options="options" @select="handleSelect">
                     <n-avatar src="https://q1.qlogo.cn/g?b=qq&nk=2437916756&s=640"></n-avatar>
@@ -230,9 +249,31 @@ const cancel_download = (id)=>{
                 <div>
                   {{ user?.username }}
                 </div>
+                <div style="width: 100%;padding: 0 1rem;display: flex;justify-content: start">
+                  <n-tag round :bordered="false" type="success" size="small">
+                    剩余空间：{{ size2Str(storage?.total_storage - storage?.used_storage) }}
+                    <template #icon>
+                      <n-icon>
+                        <HddOutlined></HddOutlined>
+                      </n-icon>
+                    </template>
+                  </n-tag>
+                </div>
+                <div style="width: 100%;padding: 0 1rem">
+                  <n-progress
+                      style="width: 100%"
+                      type="line"
+                      :percentage="percent"
+                  />
+                </div>
               </div>
-              <div v-else style="margin-left: 1rem">
+              <div v-else style="margin-left: 1rem" class="small">
                 <n-avatar src="https://q1.qlogo.cn/g?b=qq&nk=2437916756&s=640"></n-avatar>
+                <n-progress
+                    style="width: 30px;height: 30px;font-size: .2rem"
+                    type="circle"
+                    :percentage="percent"
+                />
               </div>
             </div>
           </div>
@@ -254,7 +295,7 @@ const cancel_download = (id)=>{
                     <template #header>
                       <div
                           style="display: flex;justify-content: center;align-items: center;font-size: 1.2rem;font-weight: 800;">
-                        下载任务
+                        下载任务 {{ storage }}
                       </div>
                     </template>
                     <!--                    {{download_tasks}}-->
@@ -268,9 +309,11 @@ const cancel_download = (id)=>{
                            style="border: 1px solid #dfdfdf;padding: .5rem;border-radius: 4px;margin: .5rem 0">
                         <div style="display: flex;justify-content: space-between">
                           <div>{{ item.file_name }}</div>
-                          <div @click="cancel_download(item.file_id)" class="close-btn"><i class="iconfont icon-close"></i></div>
+                          <div @click="cancel_download(item.file_id)" class="close-btn"><i
+                              class="iconfont icon-close"></i></div>
                         </div>
-                        <n-progress :show-indicator="false" type="line" :percentage="item.percent"  :processing="item.percent != 100" />
+                        <n-progress :show-indicator="false" type="line" :percentage="item.percent"
+                                    :processing="item.percent != 100"/>
                         <div style="display: flex;justify-content: space-between">
                           <div>{{ size2Str(item.speed) }}/s</div>
                           <div>{{ item.percent }}%</div>
@@ -361,7 +404,7 @@ const cancel_download = (id)=>{
   background-color: #555;
 }
 
-.close-btn{
+.close-btn {
   width: 20px;
   height: 20px;
   display: flex;
@@ -372,13 +415,22 @@ const cancel_download = (id)=>{
   transition: all .2s;
   cursor: pointer;
   margin-bottom: .2rem;
-  &:hover{
+
+  &:hover {
     background: rgba(223, 223, 223, .6);
   }
-  i{
-    &::before{
+
+  i {
+    &::before {
       vertical-align: middle;
     }
   }
 }
+
+.small {
+  :deep(.n-progress-text) {
+    font-size: .6rem;
+  }
+}
+
 </style>

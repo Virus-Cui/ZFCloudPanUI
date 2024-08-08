@@ -7,8 +7,6 @@ import * as apis from './apis'
 import {size2Str} from "assets/utils/commons";
 import FileIcon from './components/FileIcon.vue'
 import Upload_file_dialog from "~/pages/user/files/dialogs/upload_file_dialog.vue";
-import {NProgress} from 'naive-ui'
-import SpeedBar from "~/pages/user/files/components/SpeedBar.vue";
 
 const upload_file_dialog = ref()
 const loading = ref(false)
@@ -82,7 +80,6 @@ const pagination = reactive({
 });
 
 const init = () => {
-
   loading.value = true
   height.value = `calc(100vh - ${document.querySelector(".n-card").clientHeight}px - 2rem - 6rem - 10rem)`;
   apis.load_files({
@@ -133,6 +130,9 @@ const handleSelect = (str) => {
       apis.add_download_task(current)
       break
     case 'delete':
+      apis.remove_file(current.fileId).then(res=>{
+        init()
+      })
       break
   }
   showDropdown.value = false

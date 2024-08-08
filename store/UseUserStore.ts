@@ -16,6 +16,8 @@ type Menu = {
 type User = {
     username: string,
     token: string,
+    used: number,
+    total: number,
     menus: Menu[]
 }
 
